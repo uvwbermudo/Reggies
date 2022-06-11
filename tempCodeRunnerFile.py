@@ -1,2 +1,2 @@
 
-        print(f'!!!!{item}')
+        mydb.execute(f"SELECT courseId FROM cours

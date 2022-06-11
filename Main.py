@@ -37,7 +37,7 @@ class CourseForm(QMainWindow):
         mydb.execute(f"INSERT INTO courses VALUES('{course[0]}','{course[1]}')")
         db.commit()
         self.close() 
-        my_app.show_courses() 
+        my_app.show_courses()
         self.clear_fields() 
 
     def fill_course(self):
@@ -176,6 +176,8 @@ class MainWindow(QMainWindow):
         self.selected_id = item.text()
     
     def setComboBox(self):
+        self.student_form_window.course_code.clear()
+        self.dropdowns = []
         mydb.execute(f"SELECT courseId FROM courses ORDER BY courseId ASC")
         rows = mydb.fetchall()
         for item in rows:
@@ -219,6 +221,7 @@ class MainWindow(QMainWindow):
             self.course_form_window.mode = 'Add'
 
     def show_courses(self, courseCode = None):
+        self.setComboBox()
         hheader = self.course_table.horizontalHeader()         
         hheader.setSectionResizeMode(QHeaderView.Stretch)
         vheader = self.course_table.verticalHeader()
@@ -239,6 +242,7 @@ class MainWindow(QMainWindow):
 
 
     def show_students(self, idNumber = None):
+        self.setComboBox()
         hheader = self.student_table.horizontalHeader()         
         hheader.setSectionResizeMode(QHeaderView.Stretch)
         vheader = self.student_table.verticalHeader()
