@@ -67,10 +67,10 @@ class StudentForm(QMainWindow):
         self.coursescombo = []
         self.gendercombo = ['Male', 'Female']
         self.yearcombo = ['1','2','3','4','5','6']
-
-    def set_combos(self,courses):
         self.gender.addItems(self.gendercombo)
         self.year_level.addItems(self.yearcombo)
+
+    def set_combos(self,courses):
         self.coursescombo = courses
         self.course_code.addItems(self.coursescombo)
     
