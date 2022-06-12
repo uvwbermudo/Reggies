@@ -19,6 +19,8 @@ class CourseForm(QMainWindow):
         self.fields = [self.course_id,self.course_name]
         self.mode = ''
         self.selected_course = ''
+        self.pop_up = QErrorMessage()
+        self.pop_up.setWindowTitle('Error')
     
     def done_pressed(self):
         if self.mode == 'Add':
@@ -34,7 +36,15 @@ class CourseForm(QMainWindow):
         courseId = self.course_id.text()
         courseName = self.course_name.text()
         course = [courseId, courseName]
-        mydb.execute(f"INSERT INTO courses VALUES('{course[0]}','{course[1]}')")
+        for item in course:
+            if item == None or item == '':
+                self.pop_up.showMessage('Invalid input or Missing Fields.')
+                return
+        try:
+            mydb.execute(f"INSERT INTO courses VALUES('{course[0]}','{course[1]}')")
+        except:
+            self.pop_up.showMessage('Course code already in use.')
+            return
         db.commit()
         self.close() 
         my_app.show_courses()
@@ -43,14 +53,34 @@ class CourseForm(QMainWindow):
     def fill_course(self):
         mydb.execute(f"SELECT * from courses where courseId = '{self.selected_course}'")
         rows = mydb.fetchone()
+        if rows == None:
+            self.pop_up.showMessage('Please select a course code to edit.')
+            self.close()
+            return
         self.course_id.setText(rows[0])
         self.course_name.setText(rows[1])
     
     def edit_course(self):
+        reply = QMessageBox.question(self, 'Confirmation', 'Save edit changes?',
+        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            pass
+        else:
+            return
         courseId = self.course_id.text()
         courseName = self.course_name.text()
         course = [courseId, courseName]
-        mydb.execute(f"UPDATE courses SET courseId = '{course[0]}', courseName = '{course[1]}'  WHERE courseId = '{self.selected_course}'")
+        for item in course:
+            if item == None or item == '':
+                self.pop_up.showMessage('Invalid input or Missing Fields.')
+                return
+        try:
+            mydb.execute(f"UPDATE courses SET courseId = '{course[0]}', courseName = '{course[1]}'  WHERE courseId = '{self.selected_course}'")
+        except Exception:
+            self.pop_up.showMessage('Course code already in use.')
+            return
+
+        
         db.commit()
         my_app.show_courses()
         self.close()
@@ -66,9 +96,11 @@ class StudentForm(QMainWindow):
         self.fields = [self.id_number,self.full_name,self.gender,self.course_code,self.year_level]
         self.coursescombo = []
         self.gendercombo = ['Male', 'Female']
-        self.yearcombo = ['1','2','3','4','5','6']
+        self.yearcombo = ['1','2','3','4','5','6'] 
         self.gender.addItems(self.gendercombo)
         self.year_level.addItems(self.yearcombo)
+        self.pop_up = QErrorMessage()
+        self.pop_up.setWindowTitle('Error')
 
     def set_combos(self,courses):
         self.coursescombo = courses
@@ -96,7 +128,15 @@ class StudentForm(QMainWindow):
         coursecode = self.course_code.currentText()
         year = int(self.year_level.currentText())
         student = [idnumber, fullname, year, gender, coursecode]
-        mydb.execute(f"INSERT INTO STUDENT VALUES('{student[0]}','{student[1]}',{student[2]},'{student[3]}','{student[4]}')")
+        for item in student:
+            if item == None or item == '':
+                self.pop_up.showMessage("Invalid input or missing fields.")
+                return
+        try:
+            mydb.execute(f"INSERT INTO STUDENT VALUES('{student[0]}','{student[1]}',{student[2]},'{student[3]}','{student[4]}')")
+        except Exception:
+            self.pop_up.showMessage("Id Number already in use.")
+            return
         db.commit()
         self.close() 
         my_app.show_students() 
@@ -106,6 +146,11 @@ class StudentForm(QMainWindow):
     def fill_student(self):
         mydb.execute(f"SELECT * from STUDENT where idNo = '{self.selected_id}'")
         rows = mydb.fetchone()
+        if rows == None:
+            self.pop_up.showMessage("Please select an ID Number to edit.")
+            self.close()
+            return
+
         self.id_number.setText(rows[0])
         self.full_name.setText(rows[1])
         self.year_level.setCurrentIndex(self.yearcombo.index(str(rows[2])))
@@ -115,15 +160,30 @@ class StudentForm(QMainWindow):
         except ValueError:
             self.course_code.setCurrentIndex(0)
 
-    
+
     def edit_student(self):
+        reply = QMessageBox.question(self, 'Confirmation', 'Save edit changes?',
+        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            pass
+        else:
+            return
         idnumber = self.id_number.text()
         fullname = self.full_name.text()
         gender = self.gender.currentText()
         coursecode = self.course_code.currentText()
         year = int(self.year_level.currentText())
         student = [idnumber, fullname, year, gender, coursecode]
-        mydb.execute(f"UPDATE STUDENT SET fullName = '{student[1]}', idNo = '{student[0]}', yearLevel = '{student[2]}', gender = '{student[3]}', courseCode = '{student[4]}'  WHERE idNo = '{self.selected_id}'")
+        for item in student:
+            if item == None or item == '':
+                self.pop_up.showMessage("Invalid input or missing fields.")
+                return
+        try:
+            mydb.execute(f"UPDATE STUDENT SET fullName = '{student[1]}', idNo = '{student[0]}', yearLevel = '{student[2]}', gender = '{student[3]}', courseCode = '{student[4]}'  WHERE idNo = '{self.selected_id}'")
+        except Exception:
+            self.pop_up.showMessage("ID Number already in use.")
+            return
+
         db.commit()
         my_app.show_students()
         self.close()
@@ -160,6 +220,7 @@ class MainWindow(QMainWindow):
         self.show_students()
         self.show_courses()
         self.setComboBox()
+        
 
     def search_student(self):
         find = self.student_searchbar.text()
@@ -185,11 +246,23 @@ class MainWindow(QMainWindow):
         self.student_form_window.set_combos(self.dropdowns)
         
     def delete_course(self):
+        reply = QMessageBox.question(self, 'Confirmation', f'"{self.selected_course}" Delete this course?',
+        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            pass
+        else:
+            return
         mydb.execute(f"DELETE FROM courses WHERE courseId = '{self.selected_course}'")
         db.commit()
         self.show_courses()
 
     def delete_student(self):
+        reply = QMessageBox.question(self, 'Confirmation', f'"{self.selected_id}" Delete this student?',
+        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            pass
+        else:
+            return
         mydb.execute(f"DELETE FROM student WHERE idNo = '{self.selected_id}'")
         db.commit()
         self.show_students()
